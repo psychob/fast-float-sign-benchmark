@@ -11,8 +11,8 @@ set(CMAKE_CXX_STANDARD 14)
 add_executable(fast_float_sign_extract main.cpp ring_buffer.hpp single.cpp unrolled.cpp)
 
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Suppressing benchmark's tests" FORCE)
-add_subdirectory(benchmark)
-add_subdirectory(benchmark/googletest)
+add_subdirectory(vendor/google/benchmark)
+add_subdirectory(vendor/google/googletest)
 
 target_link_libraries(fast_float_sign_extract benchmark)
 target_link_libraries(fast_float_sign_extract gtest)
