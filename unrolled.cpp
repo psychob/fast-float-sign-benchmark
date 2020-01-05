@@ -35,6 +35,7 @@ static void bench_read_unrolled(benchmark::State& state)
     }
 
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)) * 8);
+    state.SetItemsProcessed(int64_t(state.iterations()) * 8);
 }
 BENCHMARK(bench_read_unrolled)
         ->ArgPair(-1000000, -1024)
@@ -62,6 +63,7 @@ static void bench_branch_unrolled(benchmark::State& state)
     }
 
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)) * 8);
+    state.SetItemsProcessed(int64_t(state.iterations()) * 8);
 }
 BENCHMARK(bench_branch_unrolled)
         ->ArgPair(-1000000, -1024)
@@ -89,6 +91,7 @@ static void bench_ub_unrolled(benchmark::State& state)
     }
 
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)) * 8);
+    state.SetItemsProcessed(int64_t(state.iterations()) * 8);
 }
 BENCHMARK(bench_ub_unrolled)
         ->ArgPair(-1000000, -1024)
@@ -116,6 +119,7 @@ static void bench_nub_unrolled(benchmark::State& state)
     }
 
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)) * 8);
+    state.SetItemsProcessed(int64_t(state.iterations()) * 8);
 }
 BENCHMARK(bench_nub_unrolled)
         ->ArgPair(-1000000, -1024)
@@ -143,6 +147,7 @@ static void bench_signbit_unrolled(benchmark::State& state)
     }
 
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)) * 8);
+    state.SetItemsProcessed(int64_t(state.iterations()) * 8);
 }
 BENCHMARK(bench_signbit_unrolled)
         ->ArgPair(-1000000, -1024)
