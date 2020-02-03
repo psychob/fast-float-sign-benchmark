@@ -14,7 +14,7 @@ inline bool is_negative_with_branch(float f)
 
 inline bool is_negative_ub(float f)
 {
-    return *(int *)&f >> 31;
+    return *(unsigned *)&f >> 31u;
 }
 
 inline bool is_negative_sb(float f)
