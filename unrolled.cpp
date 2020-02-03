@@ -7,31 +7,40 @@
 #include <memory.h>
 #include "./ring_buffer.hpp"
 
-inline bool is_negative_with_branch(float f)
+static inline bool is_negative_with_branch(float f)
 {
     return f < 0;
 }
 
-inline bool is_negative_ub(float f)
+static inline bool is_negative_ub(float f)
 {
-    return *(unsigned *)&f >> 31u;
+    return *(unsigned *) &f >> 31u;
 }
 
-inline bool is_negative_sb(float f)
+static inline bool is_negative_sb(float f)
 {
     int buff = 0;
     memcpy(&buff, &f, sizeof(f));
-    return buff >> 31;
+    return buff >> 31u;
 }
 
-inline bool is_efficient(float f)
+static inline bool check_with_sprintf(float f)
 {
-    char buff[65];
+    char buff[64];
     sprintf(buff, "%f", f);
     return buff[0] == '-';
 }
 
-static void bench_read_unrolled(benchmark::State& state)
+static inline bool check_with_sprintf_new(float f)
+{
+    char *buff = new char[64];
+    sprintf(buff, "%f", f);
+    bool ret = buff[0] == '-';
+    delete[] buff;
+    return ret;
+}
+
+static void bench_read_unrolled(benchmark::State &state)
 {
     auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
 
@@ -44,147 +53,170 @@ static void bench_read_unrolled(benchmark::State& state)
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)) * 8);
     state.SetItemsProcessed(int64_t(state.iterations()) * 8);
 }
+
 BENCHMARK(bench_read_unrolled)
         ->ArgPair(-1000000, -1024)
         ->ArgPair(1024, 1000000)
         ->ArgPair(-1000000, 1000000);
 
-static void bench_branch_unrolled(benchmark::State& state)
+static void bench_branch_unrolled(benchmark::State &state)
 {
     auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
 
     for (auto _ : state) {
         float tmp[8];
         floats.get_8(tmp);
-        bool result[8] = {
-                is_negative_with_branch(tmp[0]),
-                is_negative_with_branch(tmp[1]),
-                is_negative_with_branch(tmp[2]),
-                is_negative_with_branch(tmp[3]),
-                is_negative_with_branch(tmp[4]),
-                is_negative_with_branch(tmp[5]),
-                is_negative_with_branch(tmp[6]),
-                is_negative_with_branch(tmp[7]),
-        };
+        bool result[8] = {is_negative_with_branch(tmp[0]),
+                          is_negative_with_branch(tmp[1]),
+                          is_negative_with_branch(tmp[2]),
+                          is_negative_with_branch(tmp[3]),
+                          is_negative_with_branch(tmp[4]),
+                          is_negative_with_branch(tmp[5]),
+                          is_negative_with_branch(tmp[6]),
+                          is_negative_with_branch(tmp[7]),};
         benchmark::DoNotOptimize(result);
     }
 
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)) * 8);
     state.SetItemsProcessed(int64_t(state.iterations()) * 8);
 }
+
 BENCHMARK(bench_branch_unrolled)
         ->ArgPair(-1000000, -1024)
         ->ArgPair(1024, 1000000)
         ->ArgPair(-1000000, 1000000);
 
-static void bench_ub_unrolled(benchmark::State& state)
+static void bench_ub_unrolled(benchmark::State &state)
 {
     auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
 
     for (auto _ : state) {
         float tmp[8];
         floats.get_8(tmp);
-        bool result[8] = {
-                is_negative_ub(tmp[0]),
-                is_negative_ub(tmp[1]),
-                is_negative_ub(tmp[2]),
-                is_negative_ub(tmp[3]),
-                is_negative_ub(tmp[4]),
-                is_negative_ub(tmp[5]),
-                is_negative_ub(tmp[6]),
-                is_negative_ub(tmp[7]),
-        };
+        bool result[8] = {is_negative_ub(tmp[0]),
+                          is_negative_ub(tmp[1]),
+                          is_negative_ub(tmp[2]),
+                          is_negative_ub(tmp[3]),
+                          is_negative_ub(tmp[4]),
+                          is_negative_ub(tmp[5]),
+                          is_negative_ub(tmp[6]),
+                          is_negative_ub(tmp[7]),};
         benchmark::DoNotOptimize(result);
     }
 
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)) * 8);
     state.SetItemsProcessed(int64_t(state.iterations()) * 8);
 }
+
 BENCHMARK(bench_ub_unrolled)
         ->ArgPair(-1000000, -1024)
         ->ArgPair(1024, 1000000)
         ->ArgPair(-1000000, 1000000);
 
-static void bench_nub_unrolled(benchmark::State& state)
+static void bench_nub_unrolled(benchmark::State &state)
 {
     auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
 
     for (auto _ : state) {
         float tmp[8];
         floats.get_8(tmp);
-        bool result[8] = {
-                is_negative_sb(tmp[0]),
-                is_negative_sb(tmp[1]),
-                is_negative_sb(tmp[2]),
-                is_negative_sb(tmp[3]),
-                is_negative_sb(tmp[4]),
-                is_negative_sb(tmp[5]),
-                is_negative_sb(tmp[6]),
-                is_negative_sb(tmp[7]),
-        };
+        bool result[8] = {is_negative_sb(tmp[0]),
+                          is_negative_sb(tmp[1]),
+                          is_negative_sb(tmp[2]),
+                          is_negative_sb(tmp[3]),
+                          is_negative_sb(tmp[4]),
+                          is_negative_sb(tmp[5]),
+                          is_negative_sb(tmp[6]),
+                          is_negative_sb(tmp[7]),};
         benchmark::DoNotOptimize(result);
     }
 
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)) * 8);
     state.SetItemsProcessed(int64_t(state.iterations()) * 8);
 }
+
 BENCHMARK(bench_nub_unrolled)
         ->ArgPair(-1000000, -1024)
         ->ArgPair(1024, 1000000)
         ->ArgPair(-1000000, 1000000);
 
-static void bench_signbit_unrolled(benchmark::State& state)
+static void bench_signbit_unrolled(benchmark::State &state)
 {
     auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
 
     for (auto _ : state) {
         float tmp[8];
         floats.get_8(tmp);
-        bool result[8] = {
-                std::signbit(tmp[0]),
-                std::signbit(tmp[1]),
-                std::signbit(tmp[2]),
-                std::signbit(tmp[3]),
-                std::signbit(tmp[4]),
-                std::signbit(tmp[5]),
-                std::signbit(tmp[6]),
-                std::signbit(tmp[7]),
-        };
+        bool result[8] = {std::signbit(tmp[0]),
+                          std::signbit(tmp[1]),
+                          std::signbit(tmp[2]),
+                          std::signbit(tmp[3]),
+                          std::signbit(tmp[4]),
+                          std::signbit(tmp[5]),
+                          std::signbit(tmp[6]),
+                          std::signbit(tmp[7]),};
         benchmark::DoNotOptimize(result);
     }
 
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)) * 8);
     state.SetItemsProcessed(int64_t(state.iterations()) * 8);
 }
+
 BENCHMARK(bench_signbit_unrolled)
         ->ArgPair(-1000000, -1024)
         ->ArgPair(1024, 1000000)
         ->ArgPair(-1000000, 1000000);
 
-static void bench_efficient_unrolled(benchmark::State& state)
+static void bench_check_with_sprintf(benchmark::State &state)
 {
     auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
 
     for (auto _ : state) {
         float tmp[8];
         floats.get_8(tmp);
-        bool result[8] = {
-                is_efficient(tmp[0]),
-                is_efficient(tmp[1]),
-                is_efficient(tmp[2]),
-                is_efficient(tmp[3]),
-                is_efficient(tmp[4]),
-                is_efficient(tmp[5]),
-                is_efficient(tmp[6]),
-                is_efficient(tmp[7]),
-        };
+        bool result[8] = {check_with_sprintf(tmp[0]),
+                          check_with_sprintf(tmp[1]),
+                          check_with_sprintf(tmp[2]),
+                          check_with_sprintf(tmp[3]),
+                          check_with_sprintf(tmp[4]),
+                          check_with_sprintf(tmp[5]),
+                          check_with_sprintf(tmp[6]),
+                          check_with_sprintf(tmp[7]),};
         benchmark::DoNotOptimize(result);
     }
 
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)) * 8);
     state.SetItemsProcessed(int64_t(state.iterations()) * 8);
 }
-BENCHMARK(bench_efficient_unrolled)
+
+BENCHMARK(bench_check_with_sprintf)
         ->ArgPair(-1000000, -1024)
         ->ArgPair(1024, 1000000)
         ->ArgPair(-1000000, 1000000);
+
+static void bench_check_with_sprintf_new(benchmark::State &state)
+{
+    auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
+
+    for (auto _ : state) {
+        float tmp[8];
+        floats.get_8(tmp);
+        bool result[8] = {check_with_sprintf(tmp[0]),
+                          check_with_sprintf(tmp[1]),
+                          check_with_sprintf(tmp[2]),
+                          check_with_sprintf(tmp[3]),
+                          check_with_sprintf(tmp[4]),
+                          check_with_sprintf(tmp[5]),
+                          check_with_sprintf(tmp[6]),
+                          check_with_sprintf(tmp[7]),};
+        benchmark::DoNotOptimize(result);
+    }
+
+    state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)) * 8);
+    state.SetItemsProcessed(int64_t(state.iterations()) * 8);
+}
+
+BENCHMARK(bench_check_with_sprintf_new)
+    ->ArgPair(-1000000, -1024)
+    ->ArgPair(1024, 1000000)
+    ->ArgPair(-1000000, 1000000);

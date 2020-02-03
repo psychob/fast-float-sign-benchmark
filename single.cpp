@@ -7,28 +7,37 @@
 #include <memory.h>
 #include "./ring_buffer.hpp"
 
-inline bool is_negative_with_branch(float f)
+static inline bool is_negative_with_branch(float f)
 {
     return f < 0;
 }
 
-inline bool is_negative_ub(float f)
+static inline bool is_negative_ub(float f)
 {
     return *(unsigned *)&f >> 31u;
 }
 
-inline bool is_negative_sb(float f)
+static inline bool is_negative_sb(float f)
 {
     int buff = 0;
     memcpy(&buff, &f, sizeof(f));
-    return buff >> 31;
+    return buff >> 31u;
 }
 
-inline bool is_efficient(float f)
+static inline bool check_with_sprintf(float f)
 {
-    char buff[65];
+    char buff[64];
     sprintf(buff, "%f", f);
     return buff[0] == '-';
+}
+
+static inline bool check_with_sprintf_new(float f)
+{
+    char * buff = new char[64];
+    sprintf(buff, "%f", f);
+    bool ret = buff[0] == '-';
+    delete[] buff;
+    return ret;
 }
 
 static void bench_read_one(benchmark::State& state)
@@ -117,19 +126,36 @@ BENCHMARK(bench_signbit_one)
         ->ArgPair(1024, 1000000)
         ->ArgPair(-1000000, 1000000);
 
-static void bench_efficient_one(benchmark::State& state)
+static void bench_check_with_sprintf(benchmark::State& state)
 {
     auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
 
     for (auto _ : state) {
-        bool tmp = is_efficient(floats.get());
+        bool tmp = check_with_sprintf(floats.get());
         benchmark::DoNotOptimize(tmp);
     }
 
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)));
     state.SetItemsProcessed(int64_t(state.iterations()));
 }
-BENCHMARK(bench_efficient_one)
+BENCHMARK(bench_check_with_sprintf)
+        ->ArgPair(-1000000, -1024)
+        ->ArgPair(1024, 1000000)
+        ->ArgPair(-1000000, 1000000);
+
+static void bench_check_with_sprintf_null(benchmark::State& state)
+{
+    auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
+
+    for (auto _ : state) {
+        bool tmp = check_with_sprintf_new(floats.get());
+        benchmark::DoNotOptimize(tmp);
+    }
+
+    state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)));
+    state.SetItemsProcessed(int64_t(state.iterations()));
+}
+BENCHMARK(bench_check_with_sprintf_null)
         ->ArgPair(-1000000, -1024)
         ->ArgPair(1024, 1000000)
         ->ArgPair(-1000000, 1000000);
