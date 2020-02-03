@@ -24,6 +24,13 @@ inline bool is_negative_sb(float f)
     return buff >> 31;
 }
 
+inline bool is_efficient(float f)
+{
+    char buff[65];
+    sprintf(buff, "%f", f);
+    return buff[0] == '-';
+}
+
 static void bench_read_one(benchmark::State& state)
 {
     auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
@@ -106,6 +113,23 @@ static void bench_signbit_one(benchmark::State& state)
     state.SetItemsProcessed(int64_t(state.iterations()));
 }
 BENCHMARK(bench_signbit_one)
+        ->ArgPair(-1000000, -1024)
+        ->ArgPair(1024, 1000000)
+        ->ArgPair(-1000000, 1000000);
+
+static void bench_efficient_one(benchmark::State& state)
+{
+    auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
+
+    for (auto _ : state) {
+        bool tmp = is_efficient(floats.get());
+        benchmark::DoNotOptimize(tmp);
+    }
+
+    state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)));
+    state.SetItemsProcessed(int64_t(state.iterations()));
+}
+BENCHMARK(bench_efficient_one)
         ->ArgPair(-1000000, -1024)
         ->ArgPair(1024, 1000000)
         ->ArgPair(-1000000, 1000000);
