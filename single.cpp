@@ -5,6 +5,7 @@
 
 #include <benchmark/benchmark.h>
 #include <memory.h>
+#include <cfloat>
 #include "./ring_buffer.hpp"
 
 static inline bool is_negative_with_branch(float f)
@@ -42,7 +43,7 @@ static inline bool check_with_sprintf_new(float f)
 
 static void bench_read_one(benchmark::State& state)
 {
-    auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
+    auto floats = ring_buff<float>();
 
     for (auto _ : state) {
         float tmp = floats.get();
@@ -52,10 +53,7 @@ static void bench_read_one(benchmark::State& state)
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)));
     state.SetItemsProcessed(int64_t(state.iterations()));
 }
-BENCHMARK(bench_read_one)
-        ->ArgPair(-1000000, -1024)
-        ->ArgPair(1024, 1000000)
-        ->ArgPair(-1000000, 1000000);
+BENCHMARK(bench_read_one);
 
 
 static void bench_branch_one(benchmark::State& state)
@@ -126,7 +124,7 @@ BENCHMARK(bench_signbit_one)
         ->ArgPair(1024, 1000000)
         ->ArgPair(-1000000, 1000000);
 
-static void bench_check_with_sprintf(benchmark::State& state)
+static void bench_check_with_sprintf_one(benchmark::State& state)
 {
     auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
 
@@ -138,12 +136,12 @@ static void bench_check_with_sprintf(benchmark::State& state)
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)));
     state.SetItemsProcessed(int64_t(state.iterations()));
 }
-BENCHMARK(bench_check_with_sprintf)
+BENCHMARK(bench_check_with_sprintf_one)
         ->ArgPair(-1000000, -1024)
         ->ArgPair(1024, 1000000)
         ->ArgPair(-1000000, 1000000);
 
-static void bench_check_with_sprintf_null(benchmark::State& state)
+static void bench_check_with_sprintf_new_one(benchmark::State& state)
 {
     auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
 
@@ -155,7 +153,7 @@ static void bench_check_with_sprintf_null(benchmark::State& state)
     state.SetBytesProcessed(int64_t(state.iterations()) * int64_t(sizeof(float)));
     state.SetItemsProcessed(int64_t(state.iterations()));
 }
-BENCHMARK(bench_check_with_sprintf_null)
+BENCHMARK(bench_check_with_sprintf_new_one)
         ->ArgPair(-1000000, -1024)
         ->ArgPair(1024, 1000000)
         ->ArgPair(-1000000, 1000000);

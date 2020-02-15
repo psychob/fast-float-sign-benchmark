@@ -12,6 +12,11 @@ template <typename T>
     class ring_buff
     {
         public:
+            ring_buff()
+            {
+                std::fill(std::begin(values), std::end(values), static_cast<T>(0));
+            }
+
             ring_buff(T from, T to)
             {
                 std::random_device rd;

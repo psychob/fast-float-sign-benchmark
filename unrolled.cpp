@@ -42,7 +42,7 @@ static inline bool check_with_sprintf_new(float f)
 
 static void bench_read_unrolled(benchmark::State &state)
 {
-    auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
+    auto floats = ring_buff<float>();
 
     for (auto _ : state) {
         float tmp[8];
@@ -54,10 +54,7 @@ static void bench_read_unrolled(benchmark::State &state)
     state.SetItemsProcessed(int64_t(state.iterations()) * 8);
 }
 
-BENCHMARK(bench_read_unrolled)
-        ->ArgPair(-1000000, -1024)
-        ->ArgPair(1024, 1000000)
-        ->ArgPair(-1000000, 1000000);
+BENCHMARK(bench_read_unrolled);
 
 static void bench_branch_unrolled(benchmark::State &state)
 {
@@ -167,7 +164,7 @@ BENCHMARK(bench_signbit_unrolled)
         ->ArgPair(1024, 1000000)
         ->ArgPair(-1000000, 1000000);
 
-static void bench_check_with_sprintf(benchmark::State &state)
+static void bench_check_with_sprintf_unrolled(benchmark::State &state)
 {
     auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
 
@@ -189,26 +186,26 @@ static void bench_check_with_sprintf(benchmark::State &state)
     state.SetItemsProcessed(int64_t(state.iterations()) * 8);
 }
 
-BENCHMARK(bench_check_with_sprintf)
+BENCHMARK(bench_check_with_sprintf_unrolled)
         ->ArgPair(-1000000, -1024)
         ->ArgPair(1024, 1000000)
         ->ArgPair(-1000000, 1000000);
 
-static void bench_check_with_sprintf_new(benchmark::State &state)
+static void bench_check_with_sprintf_new_unrolled(benchmark::State &state)
 {
     auto floats = ring_buff<float>(static_cast<float>(state.range(0)), static_cast<float>(state.range(1)));
 
     for (auto _ : state) {
         float tmp[8];
         floats.get_8(tmp);
-        bool result[8] = {check_with_sprintf(tmp[0]),
-                          check_with_sprintf(tmp[1]),
-                          check_with_sprintf(tmp[2]),
-                          check_with_sprintf(tmp[3]),
-                          check_with_sprintf(tmp[4]),
-                          check_with_sprintf(tmp[5]),
-                          check_with_sprintf(tmp[6]),
-                          check_with_sprintf(tmp[7]),};
+        bool result[8] = {check_with_sprintf_new(tmp[0]),
+                          check_with_sprintf_new(tmp[1]),
+                          check_with_sprintf_new(tmp[2]),
+                          check_with_sprintf_new(tmp[3]),
+                          check_with_sprintf_new(tmp[4]),
+                          check_with_sprintf_new(tmp[5]),
+                          check_with_sprintf_new(tmp[6]),
+                          check_with_sprintf_new(tmp[7]),};
         benchmark::DoNotOptimize(result);
     }
 
@@ -216,7 +213,7 @@ static void bench_check_with_sprintf_new(benchmark::State &state)
     state.SetItemsProcessed(int64_t(state.iterations()) * 8);
 }
 
-BENCHMARK(bench_check_with_sprintf_new)
+BENCHMARK(bench_check_with_sprintf_new_unrolled)
     ->ArgPair(-1000000, -1024)
     ->ArgPair(1024, 1000000)
     ->ArgPair(-1000000, 1000000);
